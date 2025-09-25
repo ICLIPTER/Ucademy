@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/themeToggle";
 import { authClient } from "@/lib/auth-client";
@@ -23,18 +24,15 @@ async function SignOut() {
 }
 
   return (
-   <div className="p-24">
-    Hello World
-
-    <ThemeToggle />
-
-    {session ? (
-      <div>
-        <p>{session.user.name}</p>
-        <Button onClick={SignOut}>Logout</Button>
-      </div>
-    ) : (<Button>Login</Button>
-    )}
-   </div>
+   <>
+   <section className="relative py-20">
+    <div className="flex flex-col items-center text-center space-y-8">
+        <Badge>
+            The Future of Online Learning
+        </Badge>
+    </div>
+   </section>
+   
+   </>
   );
 }
