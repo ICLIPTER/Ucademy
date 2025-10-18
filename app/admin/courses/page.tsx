@@ -20,6 +20,5 @@ export default async function CoursesPage() {
         ))}
         </div>
         </>
-
-    )
+    );
 }
