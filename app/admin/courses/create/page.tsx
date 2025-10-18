@@ -22,10 +22,9 @@ import { useRouter } from "next/navigation";
 
 
 
-
 export default function CourseCreation() {
   const [ pending, startTransition] = useTransition();
-  const router = useRouter()
+  const router = useRouter();
 
     // 1. Define your form.
   const form = useForm<CourseSchemaType>({
