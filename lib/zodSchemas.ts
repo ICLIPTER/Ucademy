@@ -42,9 +42,29 @@ export const CourseSchema = z.object({
 
     slug: z.string().min(3, {message: "Slug must be at least 3 characters"}),
 
-    status: z.enum(CourseStatus, {message: "Status must be DRAFT, PUBLISHED or ARCHIVED"}),
+    status: z.enum(CourseStatus, {message: "Status must be DRAFT, PUBLISHED or ARCHIVED"
+
+    }),
+});
+
+export const chapterSchema = z.object({
+    name: z.string().min(3, {message: "Chapter name must be at least 3 characters"}),
+    courseId: z.string().min(1, { message: "Course id is required" }),
+
+});
+
+export const lessonSchema = z.object({
+    name: z.string().min(3, {message: "Lesson name must be at least 3 characters"}),
+    courseId: z.string().min(1, { message: "Course id is required" }),
+    chapterId: z.string().min(1, { message: "Chapter id is required" }),
+    description: z.string().min(3, {message: "Lesson description must be at least 3 characters"}).optional(),
+    thumbnailkey: z.string().optional(),
+    videoKey: z.string().optional(),
 
 });
 
 
+
 export type CourseSchemaType = z.infer<typeof CourseSchema>;
+export type ChapterSchemaType = z.infer<typeof chapterSchema>;
+export type LessonSchemaType = z.infer<typeof lessonSchema>;

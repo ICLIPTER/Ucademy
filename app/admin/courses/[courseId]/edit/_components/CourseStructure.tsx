@@ -30,14 +30,17 @@ import {
 import {
   ChevronDown,
   ChevronRight,
-  FileTextIcon,
-  GripVerticalIcon,
-  Trash2,
+  FileText,
+  GripVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { toast } from "sonner";
 import { reorderChapters, reorderLessons } from "../actions";
+import { NewChapterModal } from "./NewChapterModal";
+import { NewLessonModal } from "./NewLessonModal";
+import { DeleteLesson } from "./DeleteLesson";
+import { DeleteChapter } from "./DeleteChapter";
 
 interface iAppProps {
   data: AdminCourseSingularType;
@@ -290,6 +293,7 @@ export function CourseStructure({ data }: iAppProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between border-b border-border">
           <CardTitle>Chapters</CardTitle>
+          <NewChapterModal courseId={data.id} />
         </CardHeader>
 
         <CardContent className="space-y-8">
@@ -309,7 +313,7 @@ export function CourseStructure({ data }: iAppProps) {
                       <div className="flex items-center justify-between p-3 border-b border-border">
                         <div className="flex items-center gap-2">
                           <Button size="icon" variant="ghost" {...listeners}>
-                            <GripVerticalIcon className="size-4" />
+                            <GripVertical className="size-4" />
                           </Button>
 
                           <CollapsibleTrigger asChild>
@@ -331,9 +335,8 @@ export function CourseStructure({ data }: iAppProps) {
                           </p>
                         </div>
 
-                        <Button size="icon" variant="outline">
-                          <Trash2 className="size-4" />
-                        </Button>
+                        <DeleteChapter chapterId={item.id} courseId={data.id} />
+
                       </div>
 
                       <CollapsibleContent>
@@ -356,25 +359,23 @@ export function CourseStructure({ data }: iAppProps) {
                                         size="icon"
                                         {...lessonListeners}
                                       >
-                                        <GripVerticalIcon className="size-4" />
+                                        <GripVertical className="size-4" />
                                       </Button>
-                                      <FileTextIcon className="size-4"/>
+                                      <FileText className="size-4"/>
                                       <Link href={`/admin/courses/${data.id}/${item.id}/${lesson.id}`}>
                                       {lesson.title}
                                       </Link>
                                     </div>
-                                    <Button size="icon" variant="outline">
-                                        <Trash2 className="size-4" />
-                                    </Button>
+                                    
+                                    <DeleteLesson chapterId={item.id} courseId={data.id} lessonId={lesson.id} />
+
                                   </div>
                                 )}
                               </SortableItem>
                             ))}
                           </SortableContext>
                           <div className="p-2">
-                            <Button variant="outline" className="w-full">
-                                Create New Lesson
-                            </Button>
+                            <NewLessonModal chaperId={item.id} courseId={data.id} />
                           </div>
                         </div>
                       </CollapsibleContent>
