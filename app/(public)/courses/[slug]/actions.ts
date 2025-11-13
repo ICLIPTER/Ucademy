@@ -148,7 +148,7 @@ export async function enrollInCourseAction(courseId: string): Promise<ApiRespons
             ],
 
             mode: 'payment',
-            success_url: `${env.BETTER_AUTH_URL}/payment/succcess`,
+            success_url: `${env.BETTER_AUTH_URL}/payment/success`,
             cancel_url: `${env.BETTER_AUTH_URL}/payment/cancel`,
             metadata: {
                 userId: user.id,
