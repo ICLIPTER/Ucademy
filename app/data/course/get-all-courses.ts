@@ -1,5 +1,6 @@
+import "server-only";
+
 import { prisma } from "@/lib/db";
-import { Expletus_Sans } from "next/font/google";
 
 export async function getAllCourses() {
 const data = await prisma.course.findMany({

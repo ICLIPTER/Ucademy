@@ -1,4 +1,3 @@
-import { IconEPassport } from "@tabler/icons-react";
 import { z } from "zod";
 
 export const CourseLevels = ["BEGINNER", "INTERMEDIATE", "ADVANCED"] as const;

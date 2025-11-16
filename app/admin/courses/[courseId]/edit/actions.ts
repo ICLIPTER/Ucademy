@@ -160,7 +160,8 @@ export async function reorderChapters(
     }
 }
 
-export async function createChapter(values : ChapterSchemaType): Promise<ApiResponse>{
+export async function createChapter(
+    values : ChapterSchemaType): Promise<ApiResponse>{
 
     await requireAdmin();
 
@@ -215,7 +216,8 @@ export async function createChapter(values : ChapterSchemaType): Promise<ApiResp
     
 }
 
-export async function createLesson(values : ChapterSchemaType): Promise<ApiResponse>{
+export async function createLesson(
+    values : ChapterSchemaType): Promise<ApiResponse>{
 
     await requireAdmin();
 
