@@ -1,0 +1,8 @@
+onlyBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@tailwindcss/oxide'
+  - prisma
+  - sharp
+  - sse4_crc32
+  - unrs-resolver
