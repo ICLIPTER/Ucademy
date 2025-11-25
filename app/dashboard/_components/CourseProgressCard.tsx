@@ -11,6 +11,7 @@ import { useCourseProgress } from "@/hooks/use-course-progress";
 import Image from "next/image";
 import Link from "next/link";
 
+
 interface iAppProps {
   data: EnrolledCourseType;
 }
@@ -18,7 +19,7 @@ interface iAppProps {
 export function CourseProgressCard({ data }: iAppProps) {
   const thumbnailUrl = useConstructUrl(data.course.fileKey);
   const { totalLessons, completedLessons, progressPercentage } =
-    useCourseProgress({ courseData: data.course as any });
+    useCourseProgress({ courseData: data.course });
 
   return (
     <Card className="group relative py-0 gap-0">
@@ -73,7 +74,7 @@ export function PublicCourseCardSkeleton() {
       <div className="absolute top-2 right-2 z-10 flex items-center">
         <Skeleton className="h-6 w-20 rounded-full" />
       </div>
-      <div className="w-full relativeh-fit">
+      <div className="w-full relative h-fit">
         <Skeleton className="w-full rounded-t-xl aspect-video" />
         <CardContent className="p-4">
           <div className="space-y-2">
@@ -87,7 +88,7 @@ export function PublicCourseCardSkeleton() {
               <Skeleton className="h-4 w-8" />
             </div>
           </div>
-          <Skeleton className="mt-4 w-full h-10 rounded-mdx" />
+          <Skeleton className="mt-4 w-full h-10 rounded-md" />
         </CardContent>
       </div>
     </Card>

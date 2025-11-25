@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { PublicCoursesCard } from "../(public)/_components/PublicCourseCard";
 import { EmptyState } from "../admin/courses/_components/general/EmptyState";
 import { getAllCourses } from "../data/course/get-all-courses";

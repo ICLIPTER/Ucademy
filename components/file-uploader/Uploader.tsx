@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 import { RenderEmptyState, RenderErrorState, RenderUploadedState, RenderUploadingState } from './RenderState';
 import { toast } from 'sonner';
 import {v4 as uuidv4 } from 'uuid';
-import { file, success } from 'zod';
 import { useConstructUrl } from '@/hooks/use-construct';
 
 
