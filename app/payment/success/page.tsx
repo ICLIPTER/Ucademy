@@ -11,8 +11,8 @@ export default function PaymentSuccessful() {
     const  { triggerConfetti } = useConfetti();
 
     useEffect(() => {
-        triggerConfetti();
-    }, []);
+      triggerConfetti();
+    }, [triggerConfetti]);
 
     return (
         <div className="w-full min-h-screen flex flex-1 justify-center items-center">
@@ -24,7 +24,7 @@ export default function PaymentSuccessful() {
 
                 <div className="mt-3 text-center sm:mt-5 w-full">
                     <h2 className="text-xl font-semibold">Payment Successful</h2>
-                    <p className="text-sm mt-2 text-muted-foreground tracking-tight text-balance">
+                    <p className="text-sm mt-2 text-muted-foreground tracking-tight">
                         Congratulations your payment was successful. You now can access the course
                     </p>
                     <Link href="/dashboard" className={buttonVariants({className: 'mt-5 w-full'})}>

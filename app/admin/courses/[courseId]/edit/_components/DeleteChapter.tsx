@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { tryCatch } from "@/hooks/try-catch";
 import { Trash2Icon } from "lucide-react";
 import { useState, useTransition } from "react";
-import { deleteChapter, deleteLesson } from "../actions";
+import { deleteChapter } from "../actions";
 import { toast } from "sonner";
 
 

@@ -1,11 +1,16 @@
 "use client";
 
-import { EditorContent, PureEditorContent, useEditor } from "@tiptap/react";
+import { PureEditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
 import { Menubar } from "./Menubar";
 
-export function RichTextEditor({ field }: { field: any }) {
+interface RichTextField {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+export function RichTextEditor({ field }: { field: RichTextField }) {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -25,7 +30,6 @@ export function RichTextEditor({ field }: { field: any }) {
       field.onChange(JSON.stringify(editor.getJSON()));
     },
 
-    // ✅ FIXED SAFE PARSE HERE
     content: (() => {
       if (!field.value) return "<p>Hello World</p>";
       try {

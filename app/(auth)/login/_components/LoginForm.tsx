@@ -29,7 +29,7 @@ export function LoginForm() {
         onSuccess: () => {
           toast.success('Signed in successfully')
         },
-        onError: (error) => {
+        onError: () => {
           toast.error("Something went wrong")
          },
         },
@@ -47,7 +47,7 @@ export function LoginForm() {
           toast.success("Email sent successfully");
           router.push(`/verify-request?email=${email}`);
         },
-        onError: (error) => {
+        onError: () => {
           toast.error("Error sending email");
         },
       },

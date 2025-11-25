@@ -5,10 +5,10 @@ import { v4 as uuidv4 } from "uuid";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { S3 } from "@/lib/S3Client";
 import { env } from "process";
-import arcjet, {  fixedWindow } from "@/lib/arcjet";
+import arcjet, { fixedWindow } from "@/lib/arcjet";
 import { requireAdmin } from "@/app/data/admin/require-admin";
 
-export const fileUploadSchema = z.object({
+const fileUploadSchema = z.object({
   fileName: z.string().min(1, { message: "File name is required" }),
   contentType: z.string().min(1, { message: "Content type is required" }),
   size: z.number().min(1, { message: "Size is required" }),
@@ -24,17 +24,15 @@ const aj = arcjet.withRule(
 );
 
 export async function POST(request: Request) {
-
-   const session = await requireAdmin();
+  const session = await requireAdmin();
 
   try {
-
     const decision = await aj.protect(request, {
-      fingerprint : session?.user.id as string,
+      fingerprint: session?.user.id as string,
     });
 
-    if(decision.isDenied()) {
-      return NextResponse.json({error: "Too many requests"}, {status: 429})
+    if (decision.isDenied()) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
     const body = await request.json();
@@ -42,10 +40,7 @@ export async function POST(request: Request) {
     const validation = fileUploadSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: "Invalid data" }, 
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
 
     const { fileName, contentType } = validation.data;

@@ -111,7 +111,9 @@ export function LessonForm({ chapterId, courseId, data }: iAppProps) {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <RichTextEditor field={field} />
+                      <RichTextEditor
+                        field={{ ...field, value: field.value ?? "" }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

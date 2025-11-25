@@ -49,7 +49,7 @@ export async function POST(req: Request) {
 
         await prisma.enrollment.update({
             where: {
-                id: enrollmentId as any,
+                id: enrollmentId as string,
             },
             data: {
                 userId: user.id,

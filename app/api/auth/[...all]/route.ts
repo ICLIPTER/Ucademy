@@ -3,14 +3,12 @@ import { auth } from "@/lib/auth";
 import ip from "@arcjet/ip";
 import {
   type ArcjetDecision,
-  ArcjetShieldReason,
   type BotOptions,
   type EmailOptions,
   type ProtectSignupOptions,
   type SlidingWindowRateLimitOptions,
   detectBot,
   protectSignup,
-  shield,
   slidingWindow,
 } from "@arcjet/next";
 import { toNextJsHandler } from "better-auth/next-js";

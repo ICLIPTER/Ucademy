@@ -70,7 +70,3 @@ export default function DeleteCourseRoute() {
         </div>
     )
 }
-
-function CreateCourse(values: any): Promise<unknown> {
-    throw new Error("Function not implemented.");
-}
