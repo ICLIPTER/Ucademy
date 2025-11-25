@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@arcjet/inspect": "1.0.0-beta.12",
