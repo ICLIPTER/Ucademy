@@ -1,46 +1,20 @@
-import { CourseSidebarDataType } from "@/app/data/course/get-course-sidebar-data";
+"use client";
+
 import { useMemo } from "react";
 
-interface iAppProps {
-  courseData: CourseSidebarDataType["course"];
-}
+import { courseProgress, type CourseProgress } from "@/lib/course-progress";
+import type { CourseProgressSource } from "@/lib/course-types";
 
-interface CourseProgressResult {
-  totalLessons: number;
-  completedLessons: number;
-  progressPercentage: number;
-}
-
+/**
+ * Computes a learner's progress through a course.
+ *
+ * The calculation is done on the client from the payload that was already
+ * fetched, so switching lessons never triggers another request.
+ */
 export function useCourseProgress({
   courseData,
-}: iAppProps): CourseProgressResult {
-  return useMemo(() => {
-    let totalLessons = 0;
-    let completedLessons = 0;
-
-    courseData.chapter.forEach((chapter) => {
-      chapter.lessons.forEach((lesson) => {
-        totalLessons++;
-
-        const isCompleted = lesson.lessonProgress.some(
-          (progress) => progress.lessonId === lesson.id && progress.completed
-        );
-
-        if (isCompleted) {
-          completedLessons++;
-        }
-      });
-    });
-
-    const progressPercentage =
-      totalLessons > 0
-        ? Math.round((completedLessons / totalLessons) * 100)
-        : 0;
-
-    return {
-      totalLessons,
-      completedLessons,
-      progressPercentage,
-    };
-  }, [courseData]);
+}: {
+  courseData: CourseProgressSource;
+}): CourseProgress {
+  return useMemo(() => courseProgress(courseData), [courseData]);
 }

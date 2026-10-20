@@ -29,7 +29,7 @@
   --chart-2: oklch(0.6898 0.1581 290.4107);
   --chart-3: oklch(0.97 0.008 240);
   --chart-4: oklch(0.98 0.01 240);
-  --chart-5: oklch(57.481% 0.15571 259.485);
+  --chart-5: oklch(0.57481 0.15571 259.485);
   --sidebar: oklch(0.95 0.008 250);
   --sidebar-foreground: oklch(0.25 0.02 250);
   --sidebar-primary: oklch(0.56 0.15 260);
@@ -41,7 +41,7 @@
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  --radius: 0.15rem;
+  --radius: 0.625rem;
   --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
@@ -78,7 +78,7 @@
   --chart-2: oklch(0.6898 0.1581 290.4107);
   --chart-3: oklch(0.2130 0.0078 95.4245);
   --chart-4: oklch(0.3074 0.0516 289.3230);
-  --chart-5: oklch(57.481% 0.15571 259.485);
+  --chart-5: oklch(0.57481 0.15571 259.485);
   --sidebar: oklch(0.12 0.015 250);
   --sidebar-foreground: oklch(0.9 0.015 250);
   --sidebar-primary: hsl(224.3 76.3% 48%);
@@ -90,7 +90,7 @@
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  --radius: 0.15rem;
+  --radius: 0.625rem;
   --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
@@ -160,5 +160,37 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Prevents the layout from shifting when a page scrolls. */
+    scrollbar-gutter: stable;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Respect the user's motion preference. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Print styles for certificates. */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  @page {
+    margin: 12mm;
+    size: A4 landscape;
   }
 }

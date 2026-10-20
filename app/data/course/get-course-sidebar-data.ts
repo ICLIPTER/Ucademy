@@ -1,48 +1,51 @@
 import "server-only";
-import { requireUser } from "../user/require_user";
-import { prisma } from "@/lib/db";
-import { notFound } from "next/navigation";
 
-export async function getCourseSidebarData(slug: string) {
-  const session = await requireUser();
+import { cache } from "react";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { requireUser } from "@/app/data/user/require_user";
+
+/**
+ * Course curriculum + the caller's personal progress.
+ *
+ * Wrapped in React's `cache()` because the dashboard layout *and* the page
+ * both need it — without the memo the identical (heavy) nested query ran
+ * twice for every single lesson page view.
+ */
+export const getCourseSidebarData = cache(async (slug: string) => {
+  const user = await requireUser();
 
   const course = await prisma.course.findUnique({
-    where: {
-      slug: slug,
-    },
+    where: { slug },
     select: {
       id: true,
       title: true,
-      fileKey: true,
-      duration: true,
-      level: true,
-      category: true,
       slug: true,
+      category: true,
+      fileKey: true,
+      level: true,
+      status: true,
       chapter: {
-        orderBy: {
-          position: "asc",
-        },
+        orderBy: { position: "asc" },
         select: {
           id: true,
           title: true,
           position: true,
           lessons: {
-            orderBy: {
-              position: "asc",
-            },
+            orderBy: { position: "asc" },
             select: {
               id: true,
               title: true,
-              position: true,
               description: true,
+              position: true,
+              durationMinutes: true,
+              isPreview: true,
               lessonProgress: {
-                where: {
-                  userId: session.id,
-                },
+                where: { userId: user.id },
                 select: {
+                  id: true,
                   completed: true,
                   lessonId: true,
-                  id: true,
                 },
               },
             },
@@ -52,28 +55,19 @@ export async function getCourseSidebarData(slug: string) {
     },
   });
 
-  if (!course) {
-    return notFound();
-  }
+  if (!course) notFound();
 
   const enrollment = await prisma.enrollment.findUnique({
-    where: {
-      courseId_userId: {
-        userId: session.id,
-        courseId: course.id,
-      },
-    },
+    where: { courseId_userId: { courseId: course.id, userId: user.id } },
+    select: { id: true, status: true },
   });
 
-  if (!enrollment || enrollment.status !== "Active") {
-    return notFound();
-  }
+  // Access requires an active enrolment.
+  if (!enrollment || enrollment.status !== "Active") notFound();
 
-  return {
-    course,
-  };
-}
+  return { course };
+});
 
 export type CourseSidebarDataType = Awaited<
   ReturnType<typeof getCourseSidebarData>
->;
+>["course"];

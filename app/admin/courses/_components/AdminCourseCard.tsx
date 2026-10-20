@@ -1,116 +1,186 @@
-import { AdminCourseType } from "@/app/data/admin/admin-get-courses";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent,  } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { StorageImage } from "@/components/ui/storage-image";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useConstructUrl } from "@/hooks/use-construct";
-import { ArrowRight, Eye, MoreVertical, Pencil, School, TimerIcon, Trash2 } from "lucide-react";
-import Image from "next/image";
+import { getPublicAssetUrl } from "@/lib/storage-url";
+import { formatCurrency } from "@/lib/format";
+import { categoryLabel } from "@/lib/categories";
+import {
+  ArrowRight,
+  Eye,
+  MoreVertical,
+  Pencil,
+  Star,
+  TimerIcon,
+  Trash2,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 
+export type AdminCourseCardData = {
+  id: string;
+  title: string;
+  smallDescription: string;
+  slug: string;
+  fileKey: string;
+  price: number;
+  duration: number;
+  level: string;
+  category: string;
+  status: string;
+  totalStudents?: number;
+  averageRating?: number;
+  totalReviews?: number;
+  _count?: { chapter: number; enrollment: number; reviews: number };
+};
+
 interface iAppProps {
-    data : AdminCourseType;
+  data: AdminCourseCardData;
+  /** Set on the first card of a grid so the LCP image is preloaded. */
+  priority?: boolean;
 }
 
-export function AdminCourseCard({data} : iAppProps) {
-    const thumbnailUrl = useConstructUrl(data.fileKey)
-    return (
-        <Card className="group relative py-0 gap-0">
-            {/* absolute dropdown*/ }
-            <div className="absolute top-2 right-2 z-10">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="icon">
-                    <MoreVertical className="size-4" />
-                </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem asChild>
-                        <Link href={`/admin/courses/${data.id}/edit`}>
-                            <Pencil className="size-4 mr-2" />
-                            Edit Course
-                        </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                        <Link href={`/admin/courses/${data.slug}`}>
-                            <Eye className="size-4 mr-2" />
-                            Preview
-                        </Link>
-                    </DropdownMenuItem>
+const STATUS_VARIANT: Record<
+  string,
+  "default" | "secondary" | "outline" | "destructive"
+> = {
+  PUBLISHED: "default",
+  DRAFT: "secondary",
+  ARCHIVED: "outline",
+};
 
-                    <DropdownMenuSeparator />
+export function AdminCourseCard({ data, priority = false }: iAppProps) {
+  const thumbnailUrl = getPublicAssetUrl(data.fileKey);
 
-                    <DropdownMenuItem asChild>
-                        <Link href={`/admin/courses/${data.id}/delete`}>
-                            <Trash2 className="size-4 mr-2 text-destructive" />
-                            Delete Course
-                        </Link>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-            </div>
-            <Image 
-            src={thumbnailUrl} 
-            alt="Thumbnail Url"
-            width={600} 
-            height={400} 
-            className="w-full rounded-t-lg aspect-video h-full object-cover"
-         />
+  return (
+    <Card className="group relative gap-0 overflow-hidden py-0">
+      <div className="absolute top-2 right-2 z-10">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex size-8 items-center justify-center rounded-md bg-background/80 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background"
+              aria-label="Course actions"
+            >
+              <MoreVertical className="size-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuItem asChild>
+              <Link href={`/admin/courses/${data.id}/edit`}>
+                <Pencil className="mr-2 size-4" />
+                Edit course
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              {/* Public preview lives under /courses, not /admin. */}
+              <Link href={`/courses/${data.slug}`} target="_blank">
+                <Eye className="mr-2 size-4" />
+                Preview
+              </Link>
+            </DropdownMenuItem>
 
-        <CardContent className="p-4">
-            <Link href={`/admin/courses/${data.id}/edit`} className="font-medium text-lg line-clamp-2 hover:underline group-hover:text-pimary transition-colors">
-            {data.title}
-            </Link>
-            <p className="line-clamp-2 text-sm text-muted-foreground leading-tight mt-2">{data.smallDescription}</p>
+            <DropdownMenuSeparator />
 
-        
-        <div className="mt-4 flex items-center gap-x-5">
-            <div className="flex items-center gap-x-2">
-            <TimerIcon className="size-6 p-1 rounded-md text-primary bg-primary/10" />
-            <p className=" text-sm text-muted-foreground">{data.duration} H</p>
-            </div>
-            <div className="flex items-center gap-x-2">
-            <School className="size-6 p-1 rounded-md text-primary bg-primary/10" />
-            <p className=" text-sm text-muted-foreground">{data.level} </p>
-            </div>
+            <DropdownMenuItem asChild>
+              <Link
+                href={`/admin/courses/${data.id}/delete`}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 size-4" />
+                Delete course
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div className="relative">
+        <StorageImage
+          src={thumbnailUrl}
+          alt=""
+          width={600}
+          height={400}
+          className="aspect-video w-full object-cover"
+          priority={priority}
+          sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
+        />
+        <div className="absolute top-2 left-2 flex gap-1.5">
+          <Badge variant={STATUS_VARIANT[data.status] ?? "secondary"}>
+            {data.status.charAt(0) + data.status.slice(1).toLowerCase()}
+          </Badge>
+          {data.averageRating ? (
+            <Badge variant="secondary" className="gap-1">
+              <Star className="size-3 fill-current" />
+              {data.averageRating.toFixed(1)}
+            </Badge>
+          ) : null}
+        </div>
+      </div>
+
+      <CardContent className="p-4">
+        <Link
+          href={`/admin/courses/${data.id}/edit`}
+          className="line-clamp-2 text-lg font-medium transition-colors group-hover:text-primary"
+        >
+          {data.title}
+        </Link>
+        <p className="mt-2 line-clamp-2 text-sm leading-tight text-muted-foreground">
+          {data.smallDescription}
+        </p>
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <TimerIcon className="size-4 text-primary" />
+            {data.duration} h
+          </span>
+          <span className="truncate">{categoryLabel(data.category)}</span>
+          {typeof data.totalStudents === "number" && (
+            <span className="flex items-center gap-1.5">
+              <Users className="size-4 text-primary" />
+              {data.totalStudents}
+            </span>
+          )}
+          <span className="ml-auto font-medium text-foreground">
+            {formatCurrency(data.price)}
+          </span>
         </div>
 
-        <Link className={buttonVariants({
-            className: "w-full mt-4",
-        })} href={`/admin/courses/${data.id}/edit`} >
-        Edit Course <ArrowRight className="size-4"/>
+        <Link
+          className={buttonVariants({ className: "mt-4 w-full" })}
+          href={`/admin/courses/${data.id}/edit`}
+        >
+          Edit course
+          <ArrowRight className="size-4" />
         </Link>
-        </CardContent>
-        </Card>
-    );
+      </CardContent>
+    </Card>
+  );
 }
-
 
 export function AdminCourseCardSkeleton() {
-    return (
-        <Card className="group relative py-0 gap-10">
-        <div className="absolute top-2 right-2 z-10 felx items-center gap-2">
-        <Skeleton className="h-6 w-16 rounded-full"/>
-        <Skeleton className="size-8 rounded-md"/>
+  return (
+    <Card className="gap-0 overflow-hidden py-0">
+      <div className="relative w-full">
+        <Skeleton className="aspect-video w-full rounded-none" />
+      </div>
+      <CardContent className="p-4">
+        <Skeleton className="mb-2 h-6 w-3/4 rounded" />
+        <Skeleton className="h-4 w-full rounded" />
+        <div className="mt-4 flex items-center gap-x-5">
+          <Skeleton className="size-6 rounded-md" />
+          <Skeleton className="h-4 w-10 rounded" />
         </div>
-        <div className="w-full relative h-fit">
-            <Skeleton className="w-full rounded-t-lg aspect-video h-[250px] object-cover"/>
-        </div>
-        <CardContent className="p-4">
-            <Skeleton className="h-6 w-3/4 mb-2 rounded" />
-            <Skeleton className="h-4 w-full ,b-4 rounded" />
-            <div className="mt-4 flex items-center gap-x-5">
-                <div className="flex items-center gap-x-2">
-                    <Skeleton className="size-6 rounded-md" />
-                    <Skeleton className="h-4 w-10 rounded" />
-                </div>
-                <div className="flex items-center gap-x-2">
-                    <Skeleton className="size-6 rounded-md" />
-                    <Skeleton className="h-4 w-10 rounded" />
-                </div>
-            </div>
-            <Skeleton className="mt-4 h-10 w-full rounded " />
-        </CardContent>
+        <Skeleton className="mt-4 h-10 w-full rounded" />
+      </CardContent>
     </Card>
-    )
+  );
 }

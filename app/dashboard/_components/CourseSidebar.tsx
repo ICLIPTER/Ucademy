@@ -1,6 +1,5 @@
 "use client";
 
-import { CourseSidebarDataType } from "@/app/data/course/get-course-sidebar-data";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -12,9 +11,14 @@ import { ChevronDown, Play } from "lucide-react";
 import { LessonItem } from "./LessonItem";
 import { usePathname } from "next/navigation";
 import { useCourseProgress } from "@/hooks/use-course-progress";
+import type { CourseProgressSource } from "@/lib/course-types";
 
 interface iAppProps {
-  course: CourseSidebarDataType["course"];
+  course: CourseProgressSource & {
+    title: string;
+    category: string;
+    slug: string;
+  };
 }
 
 export function CourseSidebar({ course }: iAppProps) {

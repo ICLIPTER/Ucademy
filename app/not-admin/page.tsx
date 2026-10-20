@@ -1,32 +1,38 @@
-import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ShieldXIcon } from "lucide-react";
 import Link from "next/link";
+import { ShieldX } from "lucide-react";
 
-export default function NotAdminRoute() {
-    return (
-        <div className="min-h-screen flex items-center justify-center">
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-            <Card className="max-w-md w-full">
-                <CardHeader className="text-center">
-                    <div className="bg-destructive/10 rounded-full p-4 w-fit mx-auto">
-                        <ShieldXIcon className="size-16 text-destructive" />
-                    </div>
+export const metadata = {
+  title: "Access restricted",
+  description: "You do not have permission to view this page.",
+};
 
-                    <CardTitle className="text-2xl">Access Restricted</CardTitle>
-                    <CardDescription className="max-w-xs mx-auto">Hey! You are not an admin, So You are not authorized to create any courses....</CardDescription>
-                    <CardContent>
-                        <Link href="/" className={buttonVariants({
-                            className : "w-full"
-                        })}>
-                        <ArrowLeft className="mr-1 size-4" />
-                        Back to Home
-                        </Link>
-                    </CardContent>
-                </CardHeader>
+export default function NotAdminPage() {
+  return (
+    <div className="flex min-h-[70vh] items-center justify-center px-4 py-16">
+      <Card className="w-full max-w-md">
+        <CardHeader className="items-center text-center">
+          <span className="flex size-14 items-center justify-center rounded-full bg-destructive/10">
+            <ShieldX className="size-7 text-destructive" />
+          </span>
+          <CardTitle className="text-2xl">Access restricted</CardTitle>
+          <CardDescription>
+            This area is for instructors. Your account does not have access to
+            the studio.
+          </CardDescription>
+        </CardHeader>
 
-            </Card>
-        </div>
-
-    )
+        <CardContent className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <Button asChild>
+            <Link href="/dashboard">Go to my learning</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/instructors#apply">Become an instructor</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

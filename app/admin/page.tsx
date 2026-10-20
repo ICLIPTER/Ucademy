@@ -1,43 +1,112 @@
-import { ChartAreaInteractive } from "@/components/sidebar/chart-area-interactive";
-import { SectionCards } from "@/components/sidebar/section-cards";
-import { AdminGetEnrollmentStats } from "../data/admin/admin-get-enrollment-stats";
 import Link from "next/link";
+import { Suspense } from "react";
+import { ArrowRightIcon, PlusIcon } from "lucide-react";
+
 import { buttonVariants } from "@/components/ui/button";
+import { SectionCards } from "@/components/sidebar/section-cards";
+import { EnrollmentChart } from "@/components/sidebar/enrollment-chart";
+import { AdminGetEnrollmentStats, AdminGetTopCourses } from "@/app/data/admin/admin-get-enrollment-stats";
+import { adminGetRecentCourses } from "@/app/data/admin/admin-get-recent-courses";
 import { EmptyState } from "./courses/_components/general/EmptyState";
 import { AdminCourseCard, AdminCourseCardSkeleton } from "./courses/_components/AdminCourseCard";
-import { adminGetRecentCourses } from "../data/admin/admin-get-recent-courses";
-import { Suspense } from "react";
+import { formatCurrency, formatCompactNumber } from "@/lib/format";
+import { Badge } from "@/components/ui/badge";
 
 export default async function AdminIndexPage() {
-  const enrollmentData = await AdminGetEnrollmentStats();
+  const [enrollmentData, topCourses] = await Promise.all([
+    AdminGetEnrollmentStats(30),
+    AdminGetTopCourses(5),
+  ]);
 
   return (
-    <div className="space-y-10 p-6 animate-in fade-in duration-500">
-      {/* Dashboard Top Section */}
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-        <p className="text-muted-foreground">A quick glance at your platform&apos; performance.</p>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard overview</h1>
+          <p className="text-muted-foreground">
+            A quick glance at your platform&apos;s performance.
+          </p>
+        </div>
+
+        <Link
+          className={buttonVariants({ className: "w-fit" })}
+          href="/admin/courses/create"
+        >
+          <PlusIcon className="size-4" />
+          New course
+        </Link>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary cards */}
       <SectionCards />
 
-      {/* Chart Section */}
-      <div className="rounded-2xl bg-card shadow-xl border p-6 hover:shadow-2xl transition-shadow duration-300">
-        <h2 className="text-xl font-semibold mb-4">Enrollment Trends</h2>
-        <ChartAreaInteractive data={enrollmentData} />
+      {/* Chart + top courses */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <EnrollmentChart data={enrollmentData} />
+        </div>
+
+        <div className="space-y-4 rounded-xl border bg-card p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Top courses</h2>
+            <Link
+              href="/admin/analytics"
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              Analytics
+            </Link>
+          </div>
+
+          {topCourses.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Publish a course to see performance here.
+            </p>
+          ) : (
+            <ol className="space-y-4">
+              {topCourses.map((course, index) => (
+                <li key={course.id} className="flex items-start gap-3">
+                  <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                    {index + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/courses/${course.slug}`}
+                      className="line-clamp-1 text-sm font-medium hover:underline"
+                    >
+                      {course.title}
+                    </Link>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {formatCompactNumber(course.totalStudents)} learners ·{" "}
+                      {formatCurrency(course.price)}
+                    </p>
+                  </div>
+                  {course.averageRating > 0 && (
+                    <Badge variant="secondary" className="shrink-0">
+                      {course.averageRating.toFixed(1)} ★
+                    </Badge>
+                  )}
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
       </div>
 
-      {/* Recent Courses */}
-      <div className="space-y-4 rounded-2xl bg-card shadow-xl border p-6 hover:shadow-2xl transition-shadow duration-300">
+      {/* Recent courses */}
+      <div className="space-y-4 rounded-xl border bg-card p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Recent Courses</h2>
-          <Link className={buttonVariants({ variant: "outline" })} href="/admin/courses">
-            View All Courses
+          <h2 className="text-lg font-semibold">Recent courses</h2>
+          <Link
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+            href="/admin/courses"
+          >
+            View all
+            <ArrowRightIcon className="size-4" />
           </Link>
         </div>
 
-        <Suspense fallback={<RenderRecentCoursesSkeleton />}> 
+        <Suspense fallback={<RecentCoursesSkeleton />}>
           <RenderRecentCourses />
         </Suspense>
       </div>
@@ -46,21 +115,21 @@ export default async function AdminIndexPage() {
 }
 
 async function RenderRecentCourses() {
-  const data = await adminGetRecentCourses();
+  const data = await adminGetRecentCourses(4);
 
   if (data.length === 0) {
     return (
       <EmptyState
         buttonText="Create New Course"
-        description="You don't have any courses. Create one to view here."
-        title="You Don't Have Any Courses Yet."
+        description="You don't have any courses yet. Create one to see it here."
+        title="You don't have any courses yet"
         href="/admin/courses/create"
       />
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {data.map((course) => (
         <AdminCourseCard key={course.id} data={course} />
       ))}
@@ -68,9 +137,9 @@ async function RenderRecentCourses() {
   );
 }
 
-function RenderRecentCoursesSkeleton() {
+function RecentCoursesSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {Array.from({ length: 2 }).map((_, index) => (
         <AdminCourseCardSkeleton key={index} />
       ))}

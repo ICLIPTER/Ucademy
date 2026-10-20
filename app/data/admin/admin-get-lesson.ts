@@ -1,33 +1,52 @@
 import "server-only";
 
-import { prisma } from "@/lib/db";
-import { requireAdmin } from "./require-admin";
 import { notFound } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/app/data/admin/require-admin";
 
-export async function adminGetLesson(id: string) {
-    await requireAdmin() ;
+/**
+ * A single lesson for the lesson editor.
+ *
+ * The `courseId` and `chapterId` from the URL are validated against the
+ * lesson so a lesson can never be edited through a mismatched path.
+ */
+export async function adminGetLesson(
+  lessonId: string,
+  courseId?: string,
+  chapterId?: string,
+) {
+  await requireAdmin();
 
-    const data = await prisma.lesson.findUnique({
-        where: {
-            id: id,
-        },
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: lessonId },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      thumbnailKey: true,
+      videoKey: true,
+      position: true,
+      durationMinutes: true,
+      isPreview: true,
+      chapter: {
         select: {
-            title : true,
-            videoKey: true,
-            thumbnailKey: true,
-            description: true,
-            id: true,
-            position: true,
+          id: true,
+          title: true,
+          position: true,
+          course: {
+            select: { id: true, title: true, slug: true },
+          },
         },
-    });
+      },
+    },
+  });
 
-    if(!data) {
-        return notFound();
+  if (!lesson) notFound();
 
-    }
+  if (courseId && lesson.chapter.course.id !== courseId) notFound();
+  if (chapterId && lesson.chapter.id !== chapterId) notFound();
 
-    return data;
-
+  return lesson;
 }
 
 export type AdminLessonType = Awaited<ReturnType<typeof adminGetLesson>>;

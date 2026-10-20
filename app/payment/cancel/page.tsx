@@ -1,29 +1,36 @@
-import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, XIcon } from "lucide-react";
 import Link from "next/link";
+import { XCircle } from "lucide-react";
 
-export default function PaymentCancelled() {
-    return (
-        <div className="w-full min-h-screen flex flex-1 justify-center items-center">
-            <Card className="w-[350px]">
-                <CardContent>
-                     <div className="w-full flex justify-center">
-                    <XIcon className="size-12 p-2 bg-red-500/30 text-red-500 rounded-full" />
-                </div>
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-                <div className="mt-3 text-center sm:mt-5 w-full">
-                    <h2 className="text-xl font-semibold">Payment Cancelled</h2>
-                    <p className="text-sm mt-2 text-muted-foreground tracking-tight text-balance">
-                        No worries, you wont be charged. Please Try again.
-                    </p>
-                    <Link href="/" className={buttonVariants({className: 'mt-5 w-full'})}>
-                    <ArrowLeft className="size-4"/>
-                    Go back to Homepage
-                    </Link>
-                </div>
-                </CardContent>
-            </Card>
-        </div>
-    )
+export const metadata = {
+  title: "Payment cancelled",
+  description: "Your checkout was cancelled and you have not been charged.",
+};
+
+export default function PaymentCancelPage() {
+  return (
+    <div className="flex min-h-svh items-center justify-center px-4 py-16">
+      <Card className="w-full max-w-md">
+        <CardHeader className="items-center text-center">
+          <XCircle className="size-10 text-muted-foreground" />
+          <CardTitle className="text-2xl">Payment cancelled</CardTitle>
+          <CardDescription>
+            No money has been taken. Your cart is still waiting for you if you
+            would like to try again.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <Button asChild>
+            <Link href="/courses">Back to courses</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/dashboard">My learning</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
