@@ -1,61 +1,66 @@
 "use server";
 
+import { revalidatePath, revalidateTag } from "next/cache";
+
 import { requireAdmin } from "@/app/data/admin/require-admin";
-import arcjet, {  fixedWindow } from "@/lib/arcjet";
+import { allowAction } from "@/lib/action-guard";
 import { prisma } from "@/lib/db";
 import { ApiResponse } from "@/lib/types";
-import { request } from "@arcjet/next";
-import { revalidatePath } from "next/cache";
 
-const aj = arcjet
-.withRule(
-  fixedWindow({
-    mode: "LIVE",
-    window: "1m",
-    max: 5,
-  })
-);
-
+/**
+ * Deletes a course.
+ *
+ * Ownership is enforced — the previous implementation deleted any course by
+ * id, regardless of who created it.
+ */
 export async function deleteCourse(courseId: string): Promise<ApiResponse> {
-    const session = await requireAdmin()
+  const session = await requireAdmin();
 
-    try {
-        const req = await request();
-                const decision = await aj.protect(req, {
-                    fingerprint : session.user.id,
-                });
-                
-               if(decision.isDenied()) {
-                if(decision.reason.isRateLimit()) {
-                    return {
-                        status: 'error',
-                        message: 'You have been blocked due to rate limiting',
-                    };
-                } else {
-                    return {
-                        status: "error",
-                        message: "Your are a bot! Please contact out support",
-                    };
-                }
-            }
+  const allowed = await allowAction({
+    scope: "delete-course",
+    userId: session.user.id,
+    limit: 10,
+    windowSeconds: 300,
+  });
 
-        await prisma.course.delete({
-            where: {
-                id: courseId,
-            },
-        });
+  if (!allowed) {
+    return {
+      status: "error",
+      message: "You are performing too many deletions. Please slow down.",
+    };
+  }
 
-        revalidatePath("/admin/courses");
+  try {
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { id: true, userId: true, slug: true },
+    });
 
-        return {
-            status: 'success',
-            message: 'Course Deleted Successfully',
-        }
-        
-    } catch  {
-        return {
-            status: 'error',
-            message: 'Failed to Delete Course',
-        }
+    if (!course) {
+      return { status: "error", message: "Course not found." };
     }
+
+    if (course.userId !== session.user.id) {
+      return {
+        status: "error",
+        message: "You can only delete courses that you created.",
+      };
+    }
+
+    await prisma.course.delete({ where: { id: courseId } });
+
+    revalidateTag("courses");
+    revalidatePath("/admin/courses");
+    revalidatePath("/courses");
+    revalidatePath(`/courses/${course.slug}`);
+
+    return {
+      status: "success",
+      message: "Course deleted successfully.",
+      redirectTo: "/admin/courses",
+    };
+  } catch (error) {
+    console.error("[courses] Failed to delete course:", error);
+    return { status: "error", message: "Failed to delete the course." };
+  }
 }

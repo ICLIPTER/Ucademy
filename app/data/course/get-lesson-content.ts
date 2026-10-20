@@ -1,62 +1,60 @@
 import "server-only";
-import { requireUser } from "../user/require_user";
-import { prisma } from "@/lib/db";
-import { notFound } from "next/navigation";
 
-export async function getLessonContent(lessonId: string) {
-  const session = await requireUser();
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { requireUser } from "@/app/data/user/require_user";
+
+/**
+ * A single lesson plus the caller's progress.
+ *
+ * The `slug` is validated against the lesson's course so a lesson can never
+ * be read under a different course' URL.
+ */
+export async function getLessonContent(lessonId: string, slug: string) {
+  const user = await requireUser();
 
   const lesson = await prisma.lesson.findUnique({
-    where: {
-      id: lessonId,
-    },
+    where: { id: lessonId },
     select: {
       id: true,
       title: true,
       description: true,
-      thumbnailKey: true,
       videoKey: true,
+      thumbnailKey: true,
       position: true,
-      lessonProgress: {
-        where: {
-          userId: session.id,
-        },
-        select: {
-          completed: true,
-          lessonId: true,
-        },
-      },
+      durationMinutes: true,
+      isPreview: true,
       chapter: {
         select: {
-            courseId: true,
-            course: {
-              select: {
-                slug: true,
-              },
-            },
+          id: true,
+          title: true,
+          position: true,
+          course: {
+            select: { id: true, slug: true, title: true, fileKey: true },
+          },
         },
       },
-    },
-  });
-
-  if (!lesson) {
-    return notFound();
-  }
-  const enrollment = await prisma.enrollment.findUnique({
-    where: {
-      courseId_userId: {
-        userId: session.id,
-        courseId: lesson.chapter.courseId,
+      lessonProgress: {
+        where: { userId: user.id },
+        select: { id: true, completed: true, lessonId: true },
       },
     },
-    select: {
-        status: true,
-    },
   });
 
-  if(!enrollment || enrollment.status !== "Active") {
-    return notFound();
-  }
+  if (!lesson) notFound();
+
+  // The lesson must belong to the course in the URL.
+  if (lesson.chapter.course.slug !== slug) notFound();
+
+  const enrollment = await prisma.enrollment.findUnique({
+    where: {
+      courseId_userId: { courseId: lesson.chapter.course.id, userId: user.id },
+    },
+    select: { id: true, status: true },
+  });
+
+  if (!enrollment || enrollment.status !== "Active") notFound();
+
   return lesson;
 }
 

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import {  CloudUploadIcon, ImageIcon, Loader2, XIcon } from "lucide-react";
 import { Button } from "../ui/button";
-import Image from "next/image";
+import { StorageImage } from "../ui/storage-image";
 
 export function RenderEmptyState({isDragActive}: {isDragActive : boolean}) {
     return (
@@ -45,16 +45,36 @@ export function RenderUploadedState({
     fileType : "image" | "video";
 }) {
     return (
-        <div className="reletive group w-full h-full flex items-center justify-center">
+        <div className="relative group w-full h-full flex items-center justify-center">
             {fileType === 'video' ? (
                 <video src={previewUrl} controls className="rounded-md w-full h-full"/>
             ): (
-                <Image 
-                src={previewUrl} 
-                alt="Uploaded File" 
-                fill 
-                className="object-contain p-2"
-            />
+                /*
+                 * The preview can be one of three things:
+                 *   - a `blob:` URL for a file that was just selected and has
+                 *     not been uploaded yet — `next/image` cannot handle those,
+                 *     so a plain <img> is used;
+                 *   - a remote object-storage URL for an already uploaded
+                 *     file — `StorageImage` keeps the optimiser and skips the
+                 *     brittle browser-side hostname check;
+                 *   - a local path.
+                 */
+                previewUrl.startsWith("blob:") ||
+                previewUrl.startsWith("data:") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                        src={previewUrl}
+                        alt="Uploaded file preview"
+                        className="absolute inset-0 h-full w-full object-contain p-2"
+                    />
+                ) : (
+                    <StorageImage
+                        src={previewUrl}
+                        alt="Uploaded file preview"
+                        fill
+                        className="object-contain p-2"
+                    />
+                )
             )}
             <Button variant="destructive" size="icon" className={cn(
                 'absolute top-4 right-4')}

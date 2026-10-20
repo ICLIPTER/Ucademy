@@ -1,28 +1,32 @@
 import "server-only";
 
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "./require-admin";
+import { requireAdmin } from "@/app/data/admin/require-admin";
 
-export async function adminGetRecentCourses() {
-    await requireAdmin();
+/**
+ * The most recently created courses, for the admin overview.
+ *
+ * The previous implementation hard-coded `take: 2`, so the section could
+ * never show more than two courses no matter how many existed.
+ */
+export async function adminGetRecentCourses(limit = 6) {
+  await requireAdmin();
 
-     const data = await prisma.course.findMany({
-        orderBy: {
-            createdAt: 'desc',
-        },
-        take: 2,
-            select: {
-                id: true,
-                title: true,
-                smallDescription: true,
-                duration: true,
-                level: true,
-                status: true,
-                price: true,
-                fileKey: true,
-                slug: true,
-            },
-     });
-
-     return data;
+  return prisma.course.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      smallDescription: true,
+      slug: true,
+      fileKey: true,
+      price: true,
+      duration: true,
+      level: true,
+      category: true,
+      status: true,
+      createdAt: true,
+    },
+  });
 }

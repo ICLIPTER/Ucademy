@@ -33,6 +33,7 @@ export default function CourseCreation() {
     resolver: zodResolver(CourseSchema) as Resolver<CourseSchemaType> ,
     defaultValues: {
         title : "",
+        subtitle : "",
         description : "",
         fileKey : "",
         price : 0,
@@ -100,6 +101,20 @@ export default function CourseCreation() {
                     <FormLabel>Title</FormLabel>
                     <FormControl>
                       <Input placeholder="Title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="subtitle"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Tagline</FormLabel>
+                    <FormControl>
+                      <Input placeholder="One line that sells the course" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -181,7 +196,7 @@ export default function CourseCreation() {
                 render={({ field }) => (
                   <FormItem className="w-full">
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select Category"/>
@@ -205,7 +220,7 @@ export default function CourseCreation() {
                 render={({ field }) => (
                   <FormItem className="w-full">
                     <FormLabel>Level</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select Level"/>
@@ -256,7 +271,7 @@ export default function CourseCreation() {
                 render={({ field }) => (
                   <FormItem className="w-full">
                     <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select Status"/>

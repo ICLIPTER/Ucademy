@@ -1,55 +1,67 @@
-import 'server-only';
+import "server-only";
 
-import { requireAdmin } from './require-admin';
-import { prisma } from '@/lib/db';
-import { notFound } from 'next/navigation';
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/app/data/admin/require-admin";
 
-export async function adminGetCourse(id: string) {
-    // await new Promise((resolve) => setTimeout(resolve, 2000));
+/**
+ * A single course with its full structure, for the editor.
+ *
+ * Chapters and lessons are ordered by `position` so the editor always
+ * renders them in the intended sequence.
+ */
+export async function adminGetCourse(courseId: string) {
+  await requireAdmin();
 
-    await requireAdmin();
-
-    const data = await prisma.course.findUnique({
-        where: {
-            id : id,
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: {
+      id: true,
+      title: true,
+      subtitle: true,
+      smallDescription: true,
+      description: true,
+      slug: true,
+      fileKey: true,
+      price: true,
+      duration: true,
+      level: true,
+      category: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      chapter: {
+        orderBy: { position: "asc" },
+        select: {
+          id: true,
+          title: true,
+          position: true,
+          lessons: {
+            orderBy: { position: "asc" },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              thumbnailKey: true,
+              videoKey: true,
+              position: true,
+              durationMinutes: true,
+              isPreview: true,
+            },
+          },
         },
-        select : {
-            id: true,
-            title: true,
-            description: true,
-            fileKey: true,
-            price: true,
-            duration: true,
-            level: true,
-            slug: true,
-            status: true,
-            category: true,
-            smallDescription: true,
-            chapter: {
-                select: {
-                    id: true,
-                    title: true,
-                    position: true,
-                    lessons: {
-                        select: {
-                            id: true,
-                            title: true,
-                            description: true,
-                            thumbnailKey: true,
-                            position: true,
-                            videoKey: true,
-                        }
-                    }
-                }
-            }
-        },
-    });
+      },
+    },
+  });
 
-    if(!data) {
-        return notFound();
-    }
+  if (!course) notFound();
 
-    return data;
+  return course;
 }
 
-export type AdminCourseSingularType = Awaited<ReturnType<typeof adminGetCourse>>;
+export type AdminCourseDetailType = Awaited<
+  ReturnType<typeof adminGetCourse>
+>;
+
+/** @deprecated Use `AdminCourseDetailType`. */
+export type AdminCourseSingularType = AdminCourseDetailType;

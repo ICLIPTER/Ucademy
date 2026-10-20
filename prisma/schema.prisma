@@ -24,10 +24,17 @@ model User {
 
   stripeCustomerId String? @unique
 
-  role       String?
-  banned     Boolean?  @default(false)
+  role       String?  @default("user")
+  banned     Boolean? @default(false)
   banReason  String?
   banExpires DateTime?
+
+  bio      String?
+  jobTitle String?
+
+  reviews     Review[]
+  certificates Certificate[]
+  wishlist    Wishlist[]
 
   @@map("user")
 }
@@ -37,7 +44,7 @@ model Session {
   expiresAt DateTime
   token     String   @unique
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
   ipAddress String?
   userAgent String?
   userId    String
@@ -61,7 +68,7 @@ model Account {
   scope                 String?
   password              String?
   createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  updatedAt             DateTime  @default(now())
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
@@ -73,7 +80,7 @@ model Verification {
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  updatedAt  DateTime @default(now())
 
   @@map("verification")
 }
@@ -88,7 +95,9 @@ model Course {
   duration         Int
   level            CourseLevel @default(BEGINNER)
 
-  stripePriceId String @unique
+  /// Stripe price used for checkout. Optional so a course can be created
+  /// before (or without) a Stripe account being connected.
+  stripePriceId String? @unique
 
   category         String
   smallDescription String
@@ -96,13 +105,30 @@ model Course {
 
   status CourseStatus @default(DRAFT)
 
+  /// Short marketing tagline shown on cards and in the hero.
+  subtitle String?
+  /// Public preview video (object-storage key).
+  trailerKey String?
+
+  /// Denormalised aggregates. Kept in sync by the server actions so the
+  /// catalogue can be rendered without a join-heavy aggregate query.
+  averageRating Float @default(0)
+  totalReviews  Int   @default(0)
+  totalStudents Int   @default(0)
+
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
 
   chapter    Chapter[]
   enrollment Enrollment[]
+  reviews    Review[]
+  wishlist   Wishlist[]
+  certificates Certificate[]
+
+  @@index([status, createdAt])
+  @@index([category])
 }
 
 enum CourseLevel {
@@ -124,11 +150,13 @@ model Chapter {
   position Int
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   courseId  String
 
   lessons Lesson[]
+
+  @@index([courseId, position])
 }
 
 model Lesson {
@@ -140,13 +168,19 @@ model Lesson {
   videoKey     String?
   position     Int
 
+  /// Free preview lessons are playable without an enrolment (Udemy model).
+  isPreview Boolean @default(false)
+  /// Length of the lesson in minutes, used for progress estimates.
+  durationMinutes Int @default(0)
+
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
   chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   chapterId String
 
   lessonProgress LessonProgress[]
 
+  @@index([chapterId, position])
 }
 
 model Enrollment {
@@ -156,28 +190,29 @@ model Enrollment {
   status EnrollmentStatus @default(Pending)
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   courseId  String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
 
+  /// Stripe checkout session that created this enrolment.
+  checkoutSessionId String? @unique
+  /// Amount refunded (in the smallest currency unit).
+  refundedAmount Int @default(0)
+
   @@unique([courseId, userId])
+  @@index([userId, status])
 }
 
-enum EnrollmentStatus {
-  Pending
-  Active
-  Cancelled
-}
-
+/// Per-lesson completion state for a learner.
 model LessonProgress {
   id String @id @default(uuid())
 
   completed Boolean @default(false)
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String?
@@ -186,4 +221,81 @@ model LessonProgress {
   lessonId String?
 
   @@unique([userId, lessonId])
+  @@index([userId])
+}
+
+/// A learner's rating + written feedback for a course.
+model Review {
+  id String @id @default(cuid())
+
+  /// 1 – 5 stars.
+  rating  Int
+  title   String?
+  comment String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId String
+
+  @@unique([userId, courseId])
+  @@index([courseId, createdAt])
+}
+
+/// Certificate of completion, issued once a learner finishes every lesson.
+model Certificate {
+  id String @id @default(cuid())
+
+  /// Human readable verification code, e.g. `UC-8F3K-2Q9M`.
+  serial     String   @unique
+  /// Final score snapshot at the time of issuance.
+  finalScore Float    @default(0)
+  issuedAt   DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId String
+
+  @@unique([userId, courseId])
+}
+
+/// Saved-for-later list on a course.
+model Wishlist {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId String
+
+  @@unique([userId, courseId])
+}
+
+/// Distributed rate-limit counters (replaces the previous paid WAF).
+model RateLimit {
+  id String @id
+
+  key   String @unique
+  count Int    @default(0)
+
+  resetAt DateTime
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([resetAt])
+}
+
+enum EnrollmentStatus {
+  Pending
+  Active
+  Cancelled
+  Refunded
 }

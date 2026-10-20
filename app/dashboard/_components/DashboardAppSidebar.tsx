@@ -2,20 +2,19 @@
 
 import * as React from "react";
 import {
-  IconCamera,
+  IconBook2,
+  IconCertificate,
   IconDashboard,
-  IconFileAi,
-  IconFileDescription,
-  IconFolder,
   IconHelp,
-  IconListDetails,
-  IconSearch,
+  IconHome,
   IconSettings,
+  IconStar,
+  IconTopologyStar3,
 } from "@tabler/icons-react";
 
 import Logo from "@/public/logo.png";
-import { NavMain } from "@/components/sidebar/nav-main";
-import { NavSecondary } from "@/components/sidebar/nav-secondary";
+import { NavMain, type NavMainItem } from "@/components/sidebar/nav-main";
+import { NavSecondary, type NavSecondaryItem } from "@/components/sidebar/nav-secondary";
 import { NavUser } from "@/components/sidebar/nav-user";
 import {
   Sidebar,
@@ -28,93 +27,34 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
-const data = {
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "Courses",
-      url: "/courses",
-      icon: IconListDetails,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-};
+const navMain: NavMainItem[] = [
+  { title: "Overview", url: "/dashboard", icon: IconDashboard },
+  { title: "Certificates", url: "/dashboard/certificates", icon: IconCertificate },
+  { title: "Saved courses", url: "/dashboard/wishlist", icon: IconStar },
+  { title: "Browse courses", url: "/courses", icon: IconBook2 },
+  { title: "Settings", url: "/dashboard/settings", icon: IconSettings },
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname();
+  const isAdmin = pathname.startsWith("/admin");
+
+  const navSecondary: NavSecondaryItem[] = [
+    { title: "Help centre", url: "/help", icon: IconHelp },
+    { title: "Homepage", url: "/", icon: IconHome },
+    ...(isAdmin
+      ? [
+          {
+            title: "Instructor studio",
+            url: "/admin",
+            icon: IconTopologyStar3,
+          },
+        ]
+      : []),
+  ];
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -124,8 +64,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <Link href="#">
-                <Image src={Logo} alt="Logo" className="size-5" />
+              <Link href="/dashboard">
+                <Image src={Logo} alt="" className="size-5" />
                 <span className="text-base font-semibold">Ucademy</span>
               </Link>
             </SidebarMenuButton>
@@ -134,8 +74,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
 
       <SidebarFooter>

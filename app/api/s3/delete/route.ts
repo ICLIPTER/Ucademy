@@ -1,58 +1,93 @@
-import { requireAdmin } from "@/app/data/admin/require-admin";
-import arcjet, {  fixedWindow } from "@/lib/arcjet";
-import { env } from "@/lib/env";
-import { S3 } from "@/lib/S3Client";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
-const aj = arcjet
-.withRule(
-  fixedWindow({
-    mode: "LIVE",
-    max: 5,
-    window: "1m",
-  })
-);
+import { requireAdminApi } from "@/app/data/admin/require-admin-api";
+import { rateLimit, requestFingerprint } from "@/lib/rate-limit";
+import { isManagedObjectKey, S3, STORAGE_BUCKET } from "@/lib/S3Client";
+
+/**
+ * Removes an object from storage.
+ *
+ * Only keys inside the prefixes this application manages can be deleted, so
+ * a compromised admin session cannot be used to remove unrelated objects
+ * from the bucket.
+ */
+
+const deleteSchema = z.object({
+  key: z.string().min(1).max(512),
+});
 
 export async function DELETE(request: Request) {
+  const admin = await requireAdminApi();
 
-  const session = await requireAdmin();
-    try {
-          const decision = await aj.protect(request, {
-      fingerprint : session?.user.id as string,
-    });
+  if (!admin) {
+    return NextResponse.json(
+      { error: "You are not allowed to delete files." },
+      { status: 403 },
+    );
+  }
 
-    if(decision.isDenied()) {
-      return NextResponse.json({error: "Too many requests"}, {status: 429})
-    }
+  if (!S3) {
+    return NextResponse.json(
+      { error: "File storage is not configured for this deployment." },
+      { status: 503 },
+    );
+  }
 
-        const body = await request.json();
+  const limit = await rateLimit({
+    key: `s3:delete:${requestFingerprint(request, admin.id)}`,
+    limit: 30,
+    windowSeconds: 60,
+  });
 
-        const key = body.key;
+  if (!limit.success) {
+    return NextResponse.json(
+      { error: "Too many delete requests. Please slow down." },
+      { status: 429 },
+    );
+  }
 
-        if(!key) {
-            return NextResponse.json(
-                {error: 'Missing or invalid object key'},
-                {status: 400}
-            );
-        }
+  let body: unknown;
 
-        const command  = new DeleteObjectCommand({
-            Bucket: env.NEXT_PUBLIC_S3_BUCKET_NAME_IMAGES,
-            Key: key,
-        });
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Request body must be valid JSON." },
+      { status: 400 },
+    );
+  }
 
-        await S3.send(command);
+  const validation = deleteSchema.safeParse(body);
 
-        return NextResponse.json({message: 'Object deleted successfully'}, 
-            { status: 200,}
-        );
+  if (!validation.success) {
+    return NextResponse.json(
+      { error: "A valid object key is required." },
+      { status: 400 },
+    );
+  }
 
-    } catch  {
-        return NextResponse.json(
-                {error: 'Missing or invalid object key'},
-                {status: 500}
-            );
-    }
+  const { key } = validation.data;
 
+  if (!isManagedObjectKey(key)) {
+    return NextResponse.json(
+      { error: "That object key is not managed by this application." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    await S3.send(
+      new DeleteObjectCommand({ Bucket: STORAGE_BUCKET, Key: key }),
+    );
+
+    return NextResponse.json({ message: "Object deleted successfully." });
+  } catch (error) {
+    console.error("[s3] Failed to delete object:", error);
+    return NextResponse.json(
+      { error: "Could not delete the file from storage." },
+      { status: 500 },
+    );
+  }
 }

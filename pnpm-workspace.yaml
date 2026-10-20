@@ -1,8 +1,60 @@
-onlyBuiltDependencies:
-  - '@prisma/client'
-  - '@prisma/engines'
-  - '@tailwindcss/oxide'
-  - prisma
-  - sharp
-  - sse4_crc32
-  - unrs-resolver
+# pnpm workspace configuration
+#
+# pnpm >= 12 reads project settings from this file. The root package is the
+# only workspace member, which keeps a single-package repository behaving
+# identically locally and on Vercel.
+packages:
+  - "."
+
+# Force a single copy of the TipTap core. Without this override the range
+# `^3.6.2` and the range `^3.10.2` resolve to two different core versions,
+# which produces duplicate React contexts and incompatible TypeScript types
+# in the rich-text editor.
+overrides:
+  "@tiptap/*": "3.32.0"
+
+  # Deduplicate ProseMirror.
+  #
+  # `@tiptap/pm` pins `prosemirror-model@1.25.12` while the individual
+  # `prosemirror-*` packages declare `1.25.3` in their own ranges. pnpm
+  # honours both, so the tree ends up with TWO copies of prosemirror-model,
+  # prosemirror-state, prosemirror-transform and prosemirror-view.
+  #
+  # Two copies of prosemirror-state means two independent plugin-key
+  # counters, and both of them mint the key `plugin$` for their first
+  # unnamed plugin — ProseMirror then refuses to build the editor state:
+  #
+  #   RangeError: Adding different instances of a keyed plugin (plugin$)
+  #
+  # Forcing a single version of each package makes pnpm behave like a
+  # hoisted install, which is what TipTap expects anyway.
+  prosemirror-changeset: "2.4.4"
+  prosemirror-commands: "1.7.2"
+  prosemirror-dropcursor: "1.8.4"
+  prosemirror-gapcursor: "1.4.1"
+  prosemirror-history: "1.5.1"
+  prosemirror-inputrules: "1.5.1"
+  prosemirror-keymap: "1.2.3"
+  prosemirror-model: "1.25.12"
+  prosemirror-schema-list: "1.5.1"
+  prosemirror-state: "1.4.4"
+  prosemirror-tables: "1.8.5"
+  prosemirror-transform: "1.12.2"
+  prosemirror-view: "1.42.6"
+
+# Postinstall scripts that pnpm is allowed to run.
+#
+# These are required for the project to build:
+#   - prisma / @prisma/client / @prisma/engines -> download the query engine
+#   - @tailwindcss/oxide -> native lightningcss binary used by Tailwind v4
+#   - sharp / unrs-resolver / sse4_crc32 -> optional native accelerators
+#
+# Everything else is denied by default, which keeps the supply chain tight.
+allowBuilds:
+  "@prisma/client": true
+  "@prisma/engines": true
+  "@tailwindcss/oxide": true
+  prisma: true
+  sharp: true
+  sse4_crc32: true
+  unrs-resolver: true

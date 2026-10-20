@@ -1,10 +1,11 @@
 "use client";
 
 import { LessonContentType } from "@/app/data/course/get-lesson-content";
-import { RenderDescription } from "@/components/rich-text-editor/RenderDescription";
+import { ClientRenderDescription } from "@/components/rich-text-editor/ClientRenderDescription";
 import { Button } from "@/components/ui/button";
 import { tryCatch } from "@/hooks/try-catch";
 import { useConstructUrl } from "@/hooks/use-construct";
+import { parseRichText } from "@/lib/rich-text";
 import { BookIcon, CheckCircle, CheckCircleIcon } from "lucide-react";
 import { useTransition } from "react";
 import { MarkLessonComplete } from "../actions";
@@ -104,9 +105,18 @@ export function CourseContent({ data }: iAppProps) {
           {data.title}
         </h1>
 
-        {data.description && (
-          <RenderDescription json={JSON.parse(data.description)} />
-        )}
+        {data.description &&
+          (() => {
+            const json = parseRichText(data.description);
+
+            return json ? (
+              <ClientRenderDescription json={json} />
+            ) : (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {data.description}
+              </p>
+            );
+          })()}
       </div>
     </div>
   );

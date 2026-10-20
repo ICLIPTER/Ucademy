@@ -43,29 +43,32 @@ export default function CourseCreation({data}: iAppProps) {
         status : data.status,
         slug : data.slug,
         smallDescription: data.smallDescription,
+        subtitle: data.subtitle ?? "",
     },
   });
 
       function onSubmit(values: CourseSchemaType) {
-      
+
           startTransition(async () => {
             const { data : result, error} = await tryCatch(editCourse(values, data.id));
-      
+
             if(error) {
               toast.error('An unexpected error occurred, Please try again');
               return;
             }
-      
+
             if(result.status === 'success') {
               toast.success(result.message);
-              form.reset()
+              // Reset to the values that were just saved — `form.reset()`
+              // without arguments would restore the *old* values.
+              form.reset(values);
               router.push('/admin/courses')
-      
+              router.refresh();
             } else if(result.status === 'error') {
               toast.error(result.message);
             }
           })
-          
+
         }
 
     return (
@@ -85,6 +88,20 @@ export default function CourseCreation({data}: iAppProps) {
                         )}
                       />
         
+                      <FormField
+                        control={form.control}
+                        name="subtitle"
+                        render={({ field }) => (
+                          <FormItem className="w-full">
+                            <FormLabel>Tagline</FormLabel>
+                            <FormControl>
+                              <Input placeholder="One line that sells the course" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
                       <div className="flex gap-4 items-end">
                       <FormField
                         control={form.control}
@@ -160,7 +177,7 @@ export default function CourseCreation({data}: iAppProps) {
                         render={({ field }) => (
                           <FormItem className="w-full">
                             <FormLabel>Category</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger className="w-full">
                                   <SelectValue placeholder="Select Category"/>
@@ -184,7 +201,7 @@ export default function CourseCreation({data}: iAppProps) {
                         render={({ field }) => (
                           <FormItem className="w-full">
                             <FormLabel>Level</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger className="w-full">
                                   <SelectValue placeholder="Select Level"/>
@@ -235,7 +252,7 @@ export default function CourseCreation({data}: iAppProps) {
                         render={({ field }) => (
                           <FormItem className="w-full">
                             <FormLabel>Status</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger className="w-full">
                                   <SelectValue placeholder="Select Status"/>

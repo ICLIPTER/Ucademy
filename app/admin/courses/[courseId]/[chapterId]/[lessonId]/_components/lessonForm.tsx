@@ -74,18 +74,18 @@ export function LessonForm({ chapterId, courseId, data }: iAppProps) {
     <div>
       <Link
         className={buttonVariants({ variant: "outline", className: "mb-6" })}
-        href={`/admin/courses/${courseId}/edit `}
+        href={`/admin/courses/${courseId}/edit`}
       >
         <ArrowLeft className="size-4" />
 
-        <span>Go Back</span>
+        <span>Back to course</span>
       </Link>
 
       <Card>
         <CardHeader>
-          <CardTitle>Lesson Configrution</CardTitle>
+          <CardTitle>Lesson configuration</CardTitle>
           <CardDescription>
-            Configure the video and CardDescription for this lesson
+            Configure the video and description for this lesson
           </CardDescription>
         </CardHeader>
         <CardContent>
